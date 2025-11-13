@@ -1,0 +1,45 @@
+services:
+    nginx:
+        image: nginx:latest
+        container_name: nginx
+        ports:
+        - "80:80"
+        volumes:
+        - ./web:/var/www/html
+        - ./dockerfiles/default.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+        - php-fpm
+
+    php-fpm:
+        build:
+            context: ./dockerfiles
+            dockerfile: Dockerfile.php-fpm
+        container_name: php-fpm
+        volumes:
+            - ./web:/var/www/html
+    db:
+        image: mysql
+        ports: 
+            - "3306:3306"
+        environment:
+            MYSQL_DATABASE: ${MYSQL_DB}
+            MYSQL_USER: ${USUARIO_MYSQL}
+            MYSQL_PASSWORD: ${PASSWORD_USUARIO_MYSQL}
+            MYSQL_ROOT_PASSWORD: ${PASSWORD_ROOT_MYSQL}
+        volumes:
+            - ./DB:/docker-entrypoint-initdb.d
+            - persistente:/var/lib/mysql
+        networks:
+            - default
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        links: 
+            - db:db
+        ports:
+            - 8000:80
+        environment:
+            MYSQL_USER: ${USUARIO_MYSQL}
+            MYSQL_PASSWORD: ${PASSWORD_USUARIO_MYSQL}
+            MYSQL_ROOT_PASSWORD: ${PASSWORD_ROOT_MYSQL}
+volumes:
+    persistente:
