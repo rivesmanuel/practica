@@ -1,73 +1,81 @@
-CREATE DATABASE IF NOT EXISTS miBBDD;
-USE miBBDD;
 
-CREATE TABLE `Estudiantes` (
-  `ID_Estudiante` int(9) unsigned NOT NULL AUTO_INCREMENT,
-  `Nombre` varchar(45) NOT NULL,
-  `Apellido` varchar(45) NOT NULL,
-  'Fecha_Nacimiento' date NOT NULL,
-  'Direccion' varchar(100) NOT NULL,
-  'Telefono' varchar(15) NOT NULL,
-  PRIMARY KEY (`ID_Estudiante`)
+CREATE TABLE `clients` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  idFiscal varchar(9) NOT NULL COMMENT 'CIF DNI ESPANYOLES',
+  `contact_name` varchar(255) NOT NULL,
+  `contact_email` varchar(255) NOT NULL,
+  `contact_phone_number` varchar(255) DEFAULT NULL,
+  `company_name` varchar(255) NOT NULL,
+  `company_address` varchar(255) DEFAULT NULL,
+  `company_phone_number` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `clients_contact_email_unique` (`contact_email`),
+  UNIQUE KEY `users_cif_dni` (`idFiscal`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
-CREATE TABLE `Profesores` (
-  'ID_Profesor' int(9) unsigned NOT NULL AUTO_INCREMENT,
-  'Nombre' varchar(45) NOT NULL,
-  'Apellido' varchar(45) NOT NULL,
-  'Email' varchar(100) NOT NULL,
-  'Especialidad' varchar(70) NOT NULL,
-  PRIMARY KEY (`ID_Profesor`)
+-- mvc_pdo.users definition
+
+CREATE TABLE `users` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `usuario` varchar(100) NOT NULL COMMENT 'Para el login equivalente a nick',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `users_email_unique` (`email`),
+  UNIQUE KEY `users_UN` (`usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
-CREATE TABLE `Asignatura` (
-  'ID_Asignatura' int(9) unsigned NOT NULL AUTO_INCREMENT,
-  'Nombre_Asignatura' varchar(100) NOT NULL,
-  -- Codigo unico para cada asignatura
-  'Codigo_Asignatura' varchar(10) UNIQUE NOT NULL,
-  'ID_Profesor_Encargado' int(9) unsigned,
-  PRIMARY KEY (`ID_Asignatura`),
-  FOREIGN KEY (`ID_Profesor_Encargado`) REFERENCES `Profesores`(`ID_Profesor`) ON DELETE SET NULL
+-- mvc_pdo.projects definition
+
+CREATE TABLE `projects` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `deadline` date DEFAULT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'Abierto',
+  `user_id` bigint(20) unsigned NOT NULL COMMENT 'JEFE DE PROYECTO',
+  `client_id` bigint(20) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `projects_client_id_foreign` (`client_id`) USING BTREE,
+  KEY `projects_user_id_foreign` (`user_id`) USING BTREE,
+  CONSTRAINT `projects_FK` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `projects_FK_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
-CREATE TABLE `Matriculas` (
-  'ID_Matricula' int(9) unsigned NOT NULL AUTO_INCREMENT,
-  'ID_Estudiante' int(9) unsigned NOT NULL,
-  'ID_Asignatura' int(9) unsigned NOT NULL,
-  'Periodo_Academico' varchar(20) NOT NULL,
-  'Fecha_Matricula' date NOT NULL,
-  PRIMARY KEY (`ID_Matricula`),
-  FOREIGN KEY (`ID_Estudiante`) REFERENCES `Estudiantes`(`ID_Estudiante`) ON DELETE CASCADE,
-  FOREIGN KEY (`ID_Asignatura`) REFERENCES `Asignatura`(`ID_Asignatura`) ON DELETE CASCADE
+-- mvc_pdo.tasks definition
+
+CREATE TABLE `tasks` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `deadline` date DEFAULT NULL,
+  `task_status` varchar(255) NOT NULL DEFAULT 'Abierto',
+  `user_id` bigint(20) unsigned NOT NULL COMMENT 'RESPONSABLE DE TAREA',
+  `client_id` bigint(20) unsigned DEFAULT NULL,
+  `project_id` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tasks_client_id_foreign` (`client_id`) USING BTREE,
+  KEY `tasks_project_id_foreign` (`project_id`) USING BTREE,
+  KEY `tasks_user_id_foreign` (`user_id`) USING BTREE,
+  CONSTRAINT `tasks_FK` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `tasks_FK_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `tasks_FK_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE 'Asistencia' (
-  'ID_Asistencia' int(9) unsigned NOT NULL AUTO_INCREMENT,
-  'ID_Matricula' int(9) unsigned NOT NULL,
-  'Fecha' date NOT NULL,
-  'Estado' enum('Presente', 'Ausente', 'Tarde') NOT NULL,
-  PRIMARY KEY (`ID_Asistencia`),
-  FOREIGN KEY (`ID_Matricula`) REFERENCES `Matriculas`(`ID_Matricula`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-insert into Profesores (Nombre, Apellido, Email, Especialidad) values
-('Juan', 'Perez', 'juanperez@ejemplo.com', 'Matematicas'),
-('Maria', 'Gomez', 'mariagomez@ejemple.com', 'Historia'),
+insert into users (usuario,password,email,name) value ('ana','ana','ana@gmail.com','Ana Lopez');
+insert into users (usuario,password,email,name) value ('luis','luis','luis@gmail.com','Luis Perez');
+insert into users (usuario,password,email,name) value ('admin','admin','admin@gmail.com','Admin Mola');
+insert into users (usuario,password,email,name) value ('maria','maria','maria@gmail.com','Maria Lopez');
 
-insert into Asignatura (Nombre_Asignatura, Codigo_Asignatura, ID_Profesor_Encargado) values
-('Algebra', 'MAT101', 1),
-('Geometria', 'MAT102', 1),
-('Historia Universal', 'HIS101', 2);
+commit; 
 
-insert into Estudiantes (Nombre, Apellido, Fecha_Nacimiento, Direccion, Telefono) values
-('Carlos', 'Lopez', '2005-03-15', 'Calle Falsa 123', '555-1234'),
-('Ana', 'Martinez', '2006-07-22', 'Avenida Siempre Viva 742', '555-5678');
 
-insert into Matriculas (ID_Estudiante, ID_Asignatura, Periodo_Academico, Fecha_Matricula) values
-(1, 1, '2024/2025', '2024-01-10'),
-(1, 2, '2024/2025', '2024-01-10'),
-(2, 1, '2024/2025', '2024-01-11'),
-(2, 3, '2024/2025', '2024-01-11');
+insert into projects (name,description,deadline,status,user_id) value ('Proyecto Prueba', 'Muchas cosas','23/11/11','Abierto',1);
+insert into projects (name,description,deadline,status,user_id) value ('Proyecto Prueba2 ', 'Demasiado trabajo','24/01/11','Abierto',1);
+commit;
+
