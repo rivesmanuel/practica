@@ -50,7 +50,7 @@ services:
 
 configs:
   nginx_conf:
-    file: ./default.conf
+    file: ./nginx_conf/default.conf
 
 volumes:
   web-efs:
